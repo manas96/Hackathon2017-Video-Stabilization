@@ -5,7 +5,8 @@ To compile source:
 OpenCV and g++ is needed (on Ubuntu).
 
 Run script file "run.sh" with filename as argument(bash run.sh xyz.cpp). It will produce binary named "app".
-Run binary with sample video filename as argument.(./app sample.mp4)
+
+Run binary with sample video filename as argument(./app sample.mp4).
 
 Executable binaries are in /bin.
 

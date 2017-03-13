@@ -12,5 +12,5 @@ Executable binaries are in /bin.
 
 -"stabilize.cpp" processes input video, then displays input and output side by side.
 
--"realTime.cpp" displays video as soon as it's processed.
+-"realTime.cpp" displays video as soon as a frame is processed.
 

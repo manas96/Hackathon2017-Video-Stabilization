@@ -10,7 +10,7 @@ Run binary with sample video filename as argument(./app sample.mp4).
 
 Executable binaries are in /bin.
 
--"stabilize.cpp" processes input video, then displays input and output side by side.
+"stabilize.cpp" processes input video, then displays input and output side by side.
 
--"realTime.cpp" displays video as soon as a frame is processed.
+"realTime.cpp" displays video as soon as a frame is processed.
 

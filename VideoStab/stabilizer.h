@@ -21,6 +21,7 @@ signals:
 
 private:
     bool showTrackedFeatures=true;
+    bool showGraphs=true;
     MainWindow *mw;
 //const int SMOOTHING_RADIUS = 15; // In frames. The larger the more stable the video, but less reactive to sudden panning
 const int HORIZONTAL_BORDER_CROP = 20; // In pixels. Crops the border to reduce the black borders from stabilisation being too noticeable.
@@ -90,6 +91,7 @@ void loadVideo(std::string s);
 void run();
 void Play();
 void toggleTrackedFeatures();
+void toggleGraphs();
 stabilizer(MainWindow* mw);
 };
 #endif // STABILIZER_H

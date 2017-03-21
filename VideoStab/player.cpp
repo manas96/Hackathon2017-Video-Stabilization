@@ -49,11 +49,12 @@ void Player::run()
             img = QImage((const unsigned char*)(RGBframe.data),
                               RGBframe.cols,RGBframe.rows,RGBframe.step,QImage::Format_RGB888);
         }
+        /*
         else
         {
             img = QImage((const unsigned char*)(frame.data),
                                  frame.cols,frame.rows,RGBframe.step,QImage::Format_Indexed8);
-        }
+        }*/
         emit originalImage(img);
         this->msleep(delay);
     }

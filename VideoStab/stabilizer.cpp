@@ -16,7 +16,7 @@ void stabilizer::loadVideo(std::string s)
     assert(cap.isOpened());
     if (cap.isOpened())
     {
-        frameRate = (int) 30;//cap.get(CV_CAP_PROP_FPS);
+        frameRate = (int)cap.get(CV_CAP_PROP_FPS);
    }
 }
 
@@ -35,12 +35,13 @@ void stabilizer::run()
     int delay = (1000/frameRate);
 
     //---------------------------------------------------------------------------------------
+    /* commenting file printing, not needed
     // For further analysis
     ofstream out_transform("prev_to_cur_transformation.txt");
     ofstream out_trajectory("trajectory.txt");
     ofstream out_smoothed_trajectory("smoothed_trajectory.txt");
     ofstream out_new_transform("new_prev_to_cur_transformation.txt");
-
+    */
     Mat cur, cur_grey;
     Mat prev, prev_grey;
 
@@ -107,6 +108,9 @@ void stabilizer::run()
         vector <float> err;
 
         goodFeaturesToTrack(prev_grey, prev_corner, 200, 0.01, 30);
+
+
+
         calcOpticalFlowPyrLK(prev_grey, cur_grey, prev_corner, cur_corner, status, err);
 
         // weed out bad matches
@@ -115,8 +119,11 @@ void stabilizer::run()
                 prev_corner2.push_back(prev_corner[i]);
                 cur_corner2.push_back(cur_corner[i]);
             }
+
         }
-//manasTODO-estimateRigidTransform returns garbage value and crashes app when camera is
+        if(prev_corner2.size()>80){//this fixes problems with sudden panning
+
+        //manas TODO-estimateRigidTransform returns garbage value and crashes app when camera is
         //shaken too much. Replace method/handle error
 
         // translation + rotation only
@@ -136,26 +143,30 @@ void stabilizer::run()
         double dx = T.at<double>(0,2);
         double dy = T.at<double>(1,2);
         double da = atan2(T.at<double>(1,0), T.at<double>(0,0));
-        //----------------------------------------------------------
+
+
+        //------------------Plot unstabilized dx,dy,da-----------------------
+        if(showGraphs){
         mw->prev_x1 += delay;
         mw->prev_y1 += dx;
         mw->prev_y2 += dy;
-        mw->prev_y3 += da;
-        mw->updatePlots();
+       // mw->prev_y3 += da;
 
 
+        }
         //-------------------------------------------------------------
         //prev_to_cur_transform.push_back(TransformParam(dx, dy, da));
 
-        out_transform << k << " " << dx << " " << dy << " " << da << endl;
+        //out_transform << k << " " << dx << " " << dy << " " << da << endl;
         //
         // Accumulated frame to frame transform
         x += dx;
         y += dy;
         a += da;
+
         //trajectory.push_back(Trajectory(x,y,a));
         //
-        out_trajectory << k << " " << x << " " << y << " " << a << endl;
+        //out_trajectory << k << " " << x << " " << y << " " << a << endl;
         //
         z = Trajectory(x,y,a);
         //
@@ -175,7 +186,7 @@ void stabilizer::run()
             P = (Trajectory(1,1,1)-K)*P_; //P(k) = (1-K(k))*P_(k);
         }
         //smoothed_trajectory.push_back(X);
-        out_smoothed_trajectory << k << " " << X.x << " " << X.y << " " << X.a << endl;
+       // out_smoothed_trajectory << k << " " << X.x << " " << X.y << " " << X.a << endl;
         //-
         // target - current
         double diff_x = X.x - x;//
@@ -186,9 +197,19 @@ void stabilizer::run()
         dy = dy + diff_y;
         da = da + diff_a;
 
+        //--------------plot stabilized dx,dy,da-------------------
+        if(showGraphs){
+            mw->prev_y1Corrected=dx;
+            mw->prev_y2Corrected=dy;
+        //    mw->prev_y3Corrected=da;
+            mw->updatePlots();
+        }
+
+
+        //----------------------------------------------------------
         //new_prev_to_cur_transform.push_back(TransformParam(dx, dy, da));
         //
-        out_new_transform << k << " " << dx << " " << dy << " " << da << endl;
+        //out_new_transform << k << " " << dx << " " << dy << " " << da << endl;
         //
         T.at<double>(0,0) = cos(da);
         T.at<double>(0,1) = -sin(da);
@@ -225,31 +246,41 @@ void stabilizer::run()
        // waitKey(10);
         //
         */
-        cout << "Frame: " << k << "/" << max_frames << " - good optical flow: " << prev_corner2.size() << endl;
+        cout << "Frame: " << k << "/" << max_frames << " - good optical flow: " << prev_corner2.size() <<" STABILIZED"<< endl;
         k++;
 
         prev = cur.clone();//cur.copyTo(prev);
         cur_grey.copyTo(prev_grey);
 
+        //TODO :Calculate FPS
 
         output=cur2;
+        }
+        else{
+              cout << "Frame: " << k << "/" << max_frames << " - good optical flow: " << prev_corner2.size() << endl;
+              prev = cur.clone();//cur.copyTo(prev);
+              cur_grey.copyTo(prev_grey);
+
+            output=cur;
+        }
         if(showTrackedFeatures){
-            for (int i = 0; i < prev_corner2.size(); ++i) {
+            for (unsigned int i = 0; i < prev_corner2.size(); ++i) {
 
                 circle(output,prev_corner2[i],3,Scalar(0,0,255),CV_FILLED);  //bgr
                 circle(output,cur_corner2[i],3,Scalar(255,0,0),CV_FILLED);
             }
         }
+
         if (output.channels()== 3){
             cv::cvtColor(output, RGBframe, CV_BGR2RGB);
             img = QImage((const unsigned char*)(RGBframe.data),
                               RGBframe.cols,RGBframe.rows,RGBframe.step,QImage::Format_RGB888);
         }
-        else
+        /*else
         {
             img = QImage((const unsigned char*)(output.data),
                                  output.cols,output.rows,RGBframe.step,QImage::Format_Indexed8);
-        }
+        }*/
         emit stabilizedImage(img);
         this->msleep(delay);
     }
@@ -257,6 +288,9 @@ void stabilizer::run()
 
 void stabilizer::toggleTrackedFeatures(){
     showTrackedFeatures=!showTrackedFeatures;
+}
+void stabilizer::toggleGraphs(){
+    showGraphs=!showGraphs;
 }
 
 stabilizer::stabilizer(MainWindow *mw){

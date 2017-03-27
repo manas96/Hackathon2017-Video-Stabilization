@@ -1,5 +1,5 @@
 #include "player.h"
-
+#include <iostream>
 Player::Player(QObject *parent)
  : QThread(parent)
 {
@@ -20,6 +20,7 @@ bool Player::loadVideo(std::string filename) {
     if (capture.isOpened())
     {
         frameRate = (int) capture.get(CV_CAP_PROP_FPS);
+       // frameRate=30;
         return true;
     }
     else
@@ -39,11 +40,15 @@ void Player::Play()
 void Player::run()
 {
     int delay = (1000/frameRate);
+    int fno=0;
     while(!stop){
         if (!capture.read(frame))
         {
             stop = true;
+  //          std::cout<<"NULL F OUND AT  ____------------- "<<fno<<std::endl;
         }
+        fno++;
+        std::cout<<"Frame "<<fno<<" displayed from raw input"<<std::endl;
         if (frame.channels()== 3){
             cv::cvtColor(frame, RGBframe, CV_BGR2RGB);
             img = QImage((const unsigned char*)(RGBframe.data),
@@ -56,7 +61,7 @@ void Player::run()
                                  frame.cols,frame.rows,RGBframe.step,QImage::Format_Indexed8);
         }*/
         emit originalImage(img);
-        this->msleep(delay);
+        this->msleep(1000/30);
     }
 }
 

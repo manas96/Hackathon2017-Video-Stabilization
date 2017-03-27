@@ -16,7 +16,8 @@ void stabilizer::loadVideo(std::string s)
     assert(cap.isOpened());
     if (cap.isOpened())
     {
-        frameRate = (int)cap.get(CV_CAP_PROP_FPS);
+       frameRate = (int)cap.get(CV_CAP_PROP_FPS);
+       // frameRate=30;
    }
 }
 
@@ -26,14 +27,14 @@ void stabilizer::Play()
         if (isStopped()){
             stop = false;
         }
-        start(TimeCriticalPriority);
+        start(LowPriority);
     }
 }
 void stabilizer::run()
 {
     Mat output;
     int delay = (1000/frameRate);
-
+    //showGraphs=false;
     //---------------------------------------------------------------------------------------
     /* commenting file printing, not needed
     // For further analysis
@@ -85,17 +86,20 @@ void stabilizer::run()
     int max_frames = cap.get(CV_CAP_PROP_FRAME_COUNT);
     Mat last_T;
     Mat prev_grey_,cur_grey_;
+
+    int ex=static_cast<int>(cap.get(CV_CAP_PROP_FOURCC));
+    Size s=Size((int)cap.get(CV_CAP_PROP_FRAME_WIDTH),(int)cap.get(CV_CAP_PROP_FRAME_HEIGHT));
+
+    outputVideo.open("/home/manas/Documents/a.avi",ex,cap.get(CV_CAP_PROP_FPS),s,true);
 //-----------------------------------------------------------
 
     while(!stop){
-        if (!cap.read(frame))
-        {
-            stop = true;
-        }
+
 //----------------------------------------------------------------------------------------
         cap >> cur;
         //imshow("cam", cur);
         if(cur.data == NULL) {
+            std::cout<<"NULL VALUE FOUND after frame "<<k<<endl;
             break;
         }
 
@@ -121,7 +125,7 @@ void stabilizer::run()
             }
 
         }
-        if(prev_corner2.size()>80){//this fixes problems with sudden panning
+        if(prev_corner2.size()>0){//this fixes problems with sudden panning
 
         //manas TODO-estimateRigidTransform returns garbage value and crashes app when camera is
         //shaken too much. Replace method/handle error
@@ -202,7 +206,7 @@ void stabilizer::run()
             mw->prev_y1Corrected=dx;
             mw->prev_y2Corrected=dy;
         //    mw->prev_y3Corrected=da;
-            mw->updatePlots();
+        //    mw->updatePlots();
         }
 
 
@@ -222,11 +226,14 @@ void stabilizer::run()
         Mat cur2;
 
         warpAffine(prev, cur2, T, cur.size());
+      //    outputVideo.write(cur2);
 
         cur2 = cur2(Range(vert_border, cur2.rows-vert_border), Range(HORIZONTAL_BORDER_CROP, cur2.cols-HORIZONTAL_BORDER_CROP));
-/*
-        // Resize cur2 back to cur size, for better side by side comparison
         resize(cur2, cur2, cur.size());
+
+        /*
+        // Resize cur2 back to cur size, for better side by side comparison
+
 
 
 
@@ -246,7 +253,7 @@ void stabilizer::run()
        // waitKey(10);
         //
         */
-        cout << "Frame: " << k << "/" << max_frames << " - good optical flow: " << prev_corner2.size() <<" STABILIZED"<< endl;
+ //       cout << "Frame: " << k << "/" << max_frames << " - good optical flow: " << prev_corner2.size() <<" STABILIZED"<< endl;
         k++;
 
         prev = cur.clone();//cur.copyTo(prev);
@@ -255,13 +262,15 @@ void stabilizer::run()
         //TODO :Calculate FPS
 
         output=cur2;
+
         }
         else{
-              cout << "Frame: " << k << "/" << max_frames << " - good optical flow: " << prev_corner2.size() << endl;
+    //          cout << "Frame: " << k << "/" << max_frames << " - good optical flow: " << prev_corner2.size() << endl;
               prev = cur.clone();//cur.copyTo(prev);
               cur_grey.copyTo(prev_grey);
 
             output=cur;
+
         }
         if(showTrackedFeatures){
             for (unsigned int i = 0; i < prev_corner2.size(); ++i) {
@@ -270,20 +279,22 @@ void stabilizer::run()
                 circle(output,cur_corner2[i],3,Scalar(255,0,0),CV_FILLED);
             }
         }
-
+/*
         if (output.channels()== 3){
             cv::cvtColor(output, RGBframe, CV_BGR2RGB);
             img = QImage((const unsigned char*)(RGBframe.data),
                               RGBframe.cols,RGBframe.rows,RGBframe.step,QImage::Format_RGB888);
         }
-        /*else
+        else
         {
             img = QImage((const unsigned char*)(output.data),
                                  output.cols,output.rows,RGBframe.step,QImage::Format_Indexed8);
         }*/
-        emit stabilizedImage(img);
-        this->msleep(delay);
+ //       emit stabilizedImage(img);
+        disp->buffer.push_back(output);
+       //  this->msleep(delay);
     }
+
 }
 
 void stabilizer::toggleTrackedFeatures(){
@@ -293,7 +304,8 @@ void stabilizer::toggleGraphs(){
     showGraphs=!showGraphs;
 }
 
-stabilizer::stabilizer(MainWindow *mw){
+stabilizer::stabilizer(MainWindow *mw,DisplayStabilized* d){
     this->mw = mw;
+    this->disp=d;
 }
 

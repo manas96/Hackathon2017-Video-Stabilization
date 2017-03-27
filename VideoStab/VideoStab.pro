@@ -22,13 +22,15 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     player.cpp \
     stabilizer.cpp \
-    qcustomplot.cpp
+    qcustomplot.cpp \
+    displaystabilized.cpp
 
 
 HEADERS  += mainwindow.h \
     player.h \
     stabilizer.h \
-    qcustomplot.h
+    qcustomplot.h \
+    displaystabilized.h
 
 
 

@@ -3,9 +3,9 @@
 #include "player.h"
 #include <QMainWindow>
 #include "stabilizer.h"
-
+#include "displaystabilized.h"
 class stabilizer;
-
+class DisplayStabilized;
 namespace Ui {
 class MainWindow;
 }
@@ -31,6 +31,7 @@ private slots:
     //Display video frame in player UI
     void updateOriginalPlayerUI(QImage img);
     void updateStabilizedPlayerUI(QImage img);
+    void renderImage(QImage img);
     void on_checkBox_clicked();
 
     void on_checkBox_2_clicked();
@@ -45,6 +46,7 @@ private:
     stabilizer* stabStream;
     QPen* blue;
     QPen* red;
+    DisplayStabilized* displayStream;
 
 };
 

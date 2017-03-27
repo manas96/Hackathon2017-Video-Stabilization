@@ -8,9 +8,9 @@
 #include <fstream>
 #include "player.h"
 #include <string>
-
+#include "displaystabilized.h"
 class MainWindow;
-
+class DisplayStabilized;
 using namespace cv;
 class stabilizer : public Player
 {
@@ -92,6 +92,8 @@ void run();
 void Play();
 void toggleTrackedFeatures();
 void toggleGraphs();
-stabilizer(MainWindow* mw);
+stabilizer(MainWindow* mw,DisplayStabilized* d);
+VideoWriter outputVideo;
+DisplayStabilized* disp;
 };
 #endif // STABILIZER_H

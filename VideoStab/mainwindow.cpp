@@ -9,12 +9,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
      ui->setupUi(this);
-    originalPlayer = new Player();
-    stabStream=new stabilizer(this);
-    QObject::connect(originalPlayer, SIGNAL(originalImage(QImage)),
-                                  this, SLOT(updateOriginalPlayerUI(QImage)));
-    QObject::connect(stabStream,SIGNAL(stabilizedImage(QImage)),
-                                       this, SLOT(updateStabilizedPlayerUI(QImage)));
 
     prev_x1 = 0;
     prev_y1 = 0;
@@ -64,15 +58,30 @@ MainWindow::MainWindow(QWidget *parent) :
  //   ui->customPlot_3->yAxis->setLabel("angular displacement");
    // ui->customPlot_3->xAxis->setLabel("time");
 
+
+    originalPlayer = new Player();
+
+    displayStream= new DisplayStabilized(30);
+    stabStream=new stabilizer(this,displayStream);
+    QObject::connect(originalPlayer, SIGNAL(originalImage(QImage)),
+                                  this, SLOT(updateOriginalPlayerUI(QImage)));
+    QObject::connect(stabStream,SIGNAL(stabilizedImage(QImage)),
+                                       this, SLOT(updateStabilizedPlayerUI(QImage)));
+
+    QObject::connect(displayStream, SIGNAL(displayImage(QImage)),
+                     this,SLOT(renderImage(QImage)));
+
     red=new QPen(QColor(255,0,0));
     blue=new QPen(QColor(0,0,255));
     //"/home/manas/Desktop/Video stabilization/samples/sample2.mp4"
     //"/videofeed?dummy=param.mjpg"
-    std::string url="http://192.168.0.100:8080/videofeed?dummy=param.mjpg";
+   // std::string url="http://192.168.0.100:8080/videofeed?dummy=param.mjpg";
+    std::string url="/home/manas/Downloads/v2.mp4";
     originalPlayer->loadVideo(url);
     stabStream->loadVideo(url);
     originalPlayer->Play();
     stabStream->Play();
+    displayStream->Play();
 
 }
 
@@ -139,6 +148,9 @@ void MainWindow::updatePlots(){
     ui->customPlot->update();
     ui->customPlot_2->update();
    // ui->customPlot_3->update();
+
+
+
 }
 
 void MainWindow::updateOriginalPlayerUI(QImage img)
@@ -147,16 +159,30 @@ void MainWindow::updateOriginalPlayerUI(QImage img)
     {
         ui->label->setAlignment(Qt::AlignCenter);
         ui->label->setPixmap(QPixmap::fromImage(img).scaled(ui->label->size(),
-                                           Qt::KeepAspectRatio, Qt::FastTransformation));
+                                           Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
 }
 void MainWindow::updateStabilizedPlayerUI(QImage img)
 {
+
+
+
+
+    /*
     if (!img.isNull())
     {
         ui->label_2->setAlignment(Qt::AlignCenter);
         ui->label_2->setPixmap(QPixmap::fromImage(img).scaled(ui->label_2->size(),
-                                           Qt::KeepAspectRatio, Qt::FastTransformation));
+                                           Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    }*/
+}
+void MainWindow::renderImage(QImage img){
+
+    if (!img.isNull())
+    {
+        ui->label_2->setAlignment(Qt::AlignCenter);
+        ui->label_2->setPixmap(QPixmap::fromImage(img).scaled(ui->label_2->size(),
+                                           Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
 }
 
